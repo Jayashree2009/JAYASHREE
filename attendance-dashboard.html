@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Attendance Dashboard</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1b2030;--mu:#6b7285;--bd:#e3e6ef;--ac:#3b5bdb;--ok:#2b9a5b;--wa:#d98e04;--bad:#d64545;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151d;--card:#1b2030;--tx:#e8ebf5;--mu:#98a0b5;--bd:#2a3145;--ac:#748ffc}}
+:root[data-theme="dark"]{--bg:#12151d;--card:#1b2030;--tx:#e8ebf5;--mu:#98a0b5;--bd:#2a3145;--ac:#748ffc}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 2px}h2{font-size:16px;margin:0 0 10px}.sub{color:var(--mu);margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1.4fr;gap:14px}@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:520px}
+th,td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}th{color:var(--mu);font-weight:600;font-size:12px}
+input[type=number]{width:62px;padding:5px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);color:var(--tx)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;color:#fff}
+.row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:14px}
+#fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:26px;cursor:pointer;box-shadow:0 6px 18px #0004;z-index:20}
+#chat{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:min(370px,calc(100% - 28px));height:min(480px,65vh);background:var(--card);border:1px solid var(--bd);border-radius:16px;display:none;flex-direction:column;box-shadow:0 10px 30px #0005;z-index:20;overflow:hidden}
+#chat.open{display:flex}#ch{padding:12px 14px;background:var(--ac);color:#fff;font-weight:600}
+#msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:86%;padding:8px 11px;border-radius:12px;white-space:pre-wrap;font-size:14px}.u{align-self:flex-end;background:var(--ac);color:#fff}.b{align-self:flex-start;background:var(--bg);border:1px solid var(--bd)}
+#chips{padding:0 12px 6px;display:flex;gap:6px;flex-wrap:wrap}#chips button{font-size:12px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:99px;padding:4px 9px;cursor:pointer}
+#cf{display:flex;gap:6px;padding:10px;border-top:1px solid var(--bd)}#cf input{flex:1;padding:9px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);font-size:14px}
+#cf button{border:0;background:var(--ac);color:#fff;border-radius:9px;padding:0 14px;cursor:pointer}
+</style></head><body><main>
+<h1>Attendance Dashboard</h1><p class="sub">Edit the numbers below to match your records — charts, simulator and the advisor all update instantly.</p>
+<div class="card"><div class="row">
+<label>Required % <input type="number" id="req" value="75" min="1" max="100"></label>
+<label>Classes / day per subject <input type="number" id="cpd" value="1" min="1" max="8"></label>
+<label><input type="checkbox" id="exc"> Medical leave is excused (removed from total)</label></div></div>
+<div class="grid">
+<div class="card"><h2>Overall health</h2><div id="donut"></div><div id="health" style="text-align:center;font-weight:600"></div></div>
+<div class="card"><h2>Subject-wise attendance</h2><div class="scroll" id="bars"></div></div></div>
+<div class="card"><h2>OD &amp; Leave Simulator</h2>
+<p class="sub" style="margin-bottom:8px">Enter future days. <b>OD</b> counts as present; <b>Medical</b> is absent unless marked excused above; <b>Absent</b> is a plain miss.</p>
+<div class="scroll"><table id="tbl"></table></div></div>
+</main>
+<button id="fab" aria-label="Attendance Advisor">💬</button>
+<div id="chat"><div id="ch">Attendance Advisor</div><div id="msgs"></div>
+<div id="chips"></div>
+<div id="cf"><input id="q" placeholder="Ask e.g. 3-day sick leave from tomorrow…"><button id="send">Send</button></div></div>
+<script>
+const S=[{n:'Mathematics',k:['math'],a:38,t:45},{n:'Physics',k:['phy'],a:34,t:44},{n:'Chemistry',k:['chem'],a:30,t:38},{n:'English',k:['eng'],a:27,t:32},{n:'Computer Science',k:['comp','cs','coding'],a:40,t:46}];
+const sim=S.map(()=>({od:0,med:0,abs:0}));
+const $=id=>document.getElementById(id);
+const P=()=>+$('req').value||75, C=()=>+$('cpd').value||1, X=()=>$('exc').checked;
+const pc=(a,t)=>t?a/t*100:0, f=v=>v.toFixed(1)+'%';
+const col=(p)=>p>=P()+5?'var(--ok)':p>=P()?'var(--wa)':'var(--bad)';
+// final numbers after simulated days
+function fin(i){const s=S[i],m=sim[i];const od=m.od*C(),md=m.med*C(),ab=m.abs*C();
+ return{a:s.a+od,t:s.t+od+ab+(X()?0:md)}}
+function tot(useSim){let a=0,t=0;S.forEach((s,i)=>{const r=useSim?fin(i):s;a+=r.a;t+=r.t});return{a,t}}
+function donut(){const o=tot(true),p=pc(o.a,o.t),r=62,c=2*Math.PI*r,d=c*p/100;
+ $('donut').innerHTML=`<svg viewBox="0 0 180 180" style="max-width:230px;display:block;margin:auto"><circle cx="90" cy="90" r="${r}" fill="none" stroke="var(--bd)" stroke-width="20"/><circle cx="90" cy="90" r="${r}" fill="none" stroke="${col(p)}" stroke-width="20" stroke-dasharray="${d} ${c}" transform="rotate(-90 90 90)" stroke-linecap="round"/><text x="90" y="92" text-anchor="middle" font-size="28" font-weight="700" fill="var(--tx)">${f(p)}</text><text x="90" y="112" text-anchor="middle" font-size="11" fill="var(--mu)">${o.a}/${o.t} classes</text></svg>`;
+ const cur=pc(tot(false).a,tot(false).t);
+ $('health').innerHTML=(p>=P()+5?'🟢 Healthy':p>=P()?'🟡 Borderline':'🔴 At risk')+(Math.abs(p-cur)>.05?` <span style="color:var(--mu);font-weight:400">(now ${f(cur)})</span>`:'')}
+function bars(){const w=560,h=S.length*34+22,x0=130,bw=w-x0-50,ln=x0+bw*P()/100;
+ let g=S.map((s,i)=>{const p=pc(fin(i).a,fin(i).t),y=i*34+8;
+  return`<text x="0" y="${y+15}" font-size="12" fill="var(--tx)">${s.n}</text><rect x="${x0}" y="${y}" width="${bw}" height="20" rx="5" fill="var(--bd)"/><rect x="${x0}" y="${y}" width="${bw*p/100}" height="20" rx="5" fill="${col(p)}"/><text x="${x0+bw+6}" y="${y+15}" font-size="12" fill="var(--tx)">${p.toFixed(0)}%</text>`}).join('');
+ $('bars').innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="min-width:420px;width:100%">${g}<line x1="${ln}" x2="${ln}" y1="0" y2="${h-14}" stroke="var(--tx)" stroke-dasharray="4 3"/><text x="${ln}" y="${h-2}" text-anchor="middle" font-size="11" fill="var(--mu)">${P()}% required</text></svg>`}
+function table(){let h='<tr><th>Subject</th><th>Attended</th><th>Total</th><th>Now</th><th>OD days</th><th>Medical days</th><th>Absent days</th><th>Final %</th></tr>';
+ S.forEach((s,i)=>{const r=fin(i),p=pc(r.a,r.t);
+ h+=`<tr><td>${s.n}</td><td><input type="number" min="0" value="${s.a}" data-i="${i}" data-f="a"></td><td><input type="number" min="0" value="${s.t}" data-i="${i}" data-f="t"></td><td>${f(pc(s.a,s.t))}</td>
+ <td><input type="number" min="0" value="${sim[i].od}" data-i="${i}" data-s="od"></td><td><input type="number" min="0" value="${sim[i].med}" data-i="${i}" data-s="med"></td><td><input type="number" min="0" value="${sim[i].abs}" data-i="${i}" data-s="abs"></td>
+ <td><span class="pill" style="background:${col(p)}">${f(p)}</span></td></tr>`});
+ const o=tot(true);h+=`<tr><td><b>Overall</b></td><td>${tot(false).a}</td><td>${tot(false).t}</td><td>${f(pc(tot(false).a,tot(false).t))}</td><td colspan="3"></td><td><b>${f(pc(o.a,o.t))}</b></td></tr>`;
+ $('tbl').innerHTML=h}
+function render(keep){donut();bars();if(!keep)table();else refreshFinal()}
+function refreshFinal(){table()} // re-render; focus restored below
+document.addEventListener('input',e=>{const t=e.target,i=t.dataset.i;if(i==null&&!['req','cpd','exc'].includes(t.id))return;
+ const foc=t.dataset.i!=null?[t.dataset.i,t.dataset.f||t.dataset.s]:null;
+ if(i!=null){const v=Math.max(0,+t.value||0);if(t.dataset.f)S[i][t.dataset.f]=v;else sim[i][t.dataset.s]=v}
+ donut();bars();table();
+ if(foc){const el=document.querySelector(`[data-i="${foc[0]}"][data-${t.dataset.f?'f':'s'}="${foc[1]}"]`);if(el){el.focus();el.setSelectionRange?.(99,99)}}});
+// ---- Advisor ----
+const W={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,a:1,couple:2};
+function need(a,t,p){p/=100;return Math.max(0,Math.ceil((p*t-a)/(1-p)))}
+function skip(a,t,p){return Math.max(0,Math.floor(a/(p/100)-t))}
+function answer(q){const l=q.toLowerCase(),p=P();
+ const idx=S.map((s,i)=>i).filter(i=>S[i].k.some(k=>l.includes(k))||l.includes(S[i].n.toLowerCase()));
+ let m=l.match(/(\d+|one|two|three|four|five|six|seven|couple)[\s-]*(day|days|class|classes|period|periods|lecture|lectures)/);
+ let n=m?(+m[1]||W[m[1]]):0,unit=m?m[2]:'day';const cl=n?(/^(day)/.test(unit)?n*C():n):0;
+ const type=/sick|medical|ill|fever|unwell|hospital/.test(l)?'med':/\bod\b|on.?duty|hackathon|event|fest/.test(l)?'od':'abs';
+ const ids=idx.length?idx:S.map((s,i)=>i);
+ if(!cl){ // status / advice
+  return ids.map(i=>{const s=S[i],pp=pc(s.a,s.t);return pp>=p?`${s.n}: ${f(pp)} ✅ You can still miss ${skip(s.a,s.t,p)} more class(es) and stay at ${p}%+.`:`${s.n}: ${f(pp)} ⚠️ Below ${p}%. Attend the next ${need(s.a,s.t,p)} classes in a row to get back.`}).join('\n')+'\n\nTip: ask e.g. "If I take 3 days sick leave, will Chemistry drop below '+p+'%?"'}
+ const lab={med:'medical leave'+(X()?' (excused)':''),od:'On-Duty',abs:'absence'}[type];
+ const out=ids.map(i=>{const s=S[i],now=pc(s.a,s.t);let a=s.a,t=s.t;
+  if(type==='od'){a+=cl;t+=cl}else if(type==='abs'||!X()){t+=cl}
+  const af=pc(a,t),d=af-now;let msg=`${s.n}: ${f(now)} → ${f(af)} (${d>=0?'+':''}${d.toFixed(1)})`;
+  if(af<p)msg+=` 🔴 Drops BELOW ${p}%. You'd need ${need(a,t,p)} straight classes to recover.`;
+  else if(af<p+3)msg+=` 🟡 Stays above ${p}%, but the margin is thin — only ${skip(a,t,p)} spare miss(es) after this.`;
+  else msg+=` 🟢 Safe — ${skip(a,t,p)} spare miss(es) left afterwards.`;
+  return msg});
+ let r=`Simulating ${cl} class(es) of ${lab}${idx.length?'':' across all subjects'}:\n\n`+out.join('\n');
+ if(type==='med'&&!X())r+='\n\nNote: medical leave is treated as absent. If your college excuses it with a certificate, tick the "excused" box and ask again.';
+ if(type==='abs'&&out.some(x=>x.includes('BELOW')))r+='\n\nAdvice: if this absence is for an official event, ask for OD — it counts as present.';
+ return r+'\n\n(Assumes '+C()+' class/day per subject; edit above if different.)'}
+function add(t,c){const d=document.createElement('div');d.className='m '+c;d.textContent=t;$('msgs').appendChild(d);$('msgs').scrollTop=1e9}
+function ask(q){if(!q.trim())return;add(q,'u');add(answer(q),'b');$('q').value=''}
+$('fab').onclick=()=>{$('chat').classList.toggle('open');if(!$('msgs').children.length)add('Hi! I\'m your Attendance Advisor. I read your dashboard numbers and do the math for you. Try a question below.','b')};
+$('send').onclick=()=>ask($('q').value);$('q').onkeydown=e=>{if(e.key==='Enter')ask($('q').value)};
+['If I take a 3-day sick leave starting tomorrow, will my Chemistry attendance drop below 75%?','Can I skip 2 days of Physics?','Where do I stand?','2 days OD for Maths'].forEach(t=>{const b=document.createElement('button');b.textContent=t.length>34?t.slice(0,32)+'…':t;b.onclick=()=>{$('chat').classList.add('open');ask(t)};$('chips').appendChild(b)});
+render();
+</script></body></html>
