@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SRM Smart Campus – Attendance & Rooms</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f5f9;--fg:#171a26;--card:#fff;--mut:#667;--bd:#dde0ea;--ok:#1a9d5a;--bad:#d93a3a;--warn:#e59a12;--ac:#4b4de8}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f111a;--fg:#eceef8;--card:#191c2a;--mut:#9aa0b8;--bd:#2b3046;--ok:#3ed388;--bad:#ff6b6b;--warn:#f5b642;--ac:#8b8dff}}
+:root[data-theme="dark"]{--bg:#0f111a;--fg:#eceef8;--card:#191c2a;--mut:#9aa0b8;--bd:#2b3046;--ok:#3ed388;--bad:#ff6b6b;--warn:#f5b642;--ac:#8b8dff}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:14px 16px 0;max-width:1100px;margin:auto}h1{margin:0;font-size:20px}h1 small{color:var(--mut);font-weight:400;font-size:13px}
+nav{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap}nav button,.btn{border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:8px 14px;border-radius:9px;cursor:pointer;font:inherit}
+nav button.on,.btn.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{max-width:1100px;margin:auto;padding:0 16px 90px}.tab{display:none}.tab.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:3px}
+input,select{padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;max-width:100%}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:7px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.tag{padding:2px 8px;border-radius:99px;font-size:12px;color:#fff}.safe{background:var(--ok)}.danger{background:var(--warn)}.irr{background:var(--bad)}
+.alert{background:var(--bad);color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600}
+.bar{position:relative;height:16px;background:var(--bd);border-radius:8px;margin:3px 0 10px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:8px}.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.fl{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);flex-wrap:wrap}.fl>b{width:88px}
+.chip{padding:5px 10px;border-radius:8px;font-size:13px;color:#fff;cursor:pointer;border:0}.chip.f{background:var(--ok)}.chip.b{background:var(--bad)}
+#scene{perspective:1300px;height:560px;overflow:hidden;position:relative}#bld{position:absolute;left:50%;top:300px;width:330px;height:130px;margin-left:-165px;transform-style:preserve-3d}
+.plate{position:absolute;inset:0;background:var(--card);border:1px solid var(--bd);transform-style:preserve-3d;box-shadow:0 6px 0 var(--bd)}
+.rm{position:absolute;top:14px;width:96px;height:100px;border-radius:6px;color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;border:2px solid transparent}
+.rm.sel{border-color:var(--fg)}.rm.f{background:var(--ok)}.rm.b{background:var(--bad)}
+.fll{position:absolute;left:-62px;top:48px;font-size:12px;color:var(--mut);transform:rotateZ(90deg) rotateX(-60deg)}
+#big{font-size:34px;font-variant-numeric:tabular-nums;font-weight:700}
+#fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:24px;cursor:pointer;z-index:9;box-shadow:0 4px 14px #0004}
+#chat{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100vw - 32px));height:440px;background:var(--card);border:1px solid var(--bd);border-radius:14px;display:none;flex-direction:column;z-index:9;box-shadow:0 8px 30px #0005}
+#chat.on{display:flex}#msgs{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}.m{padding:8px 11px;border-radius:12px;max-width:88%;white-space:pre-wrap}.m.u{align-self:flex-end;background:var(--ac);color:#fff}.m.a{background:var(--bg);border:1px solid var(--bd)}
+.cin{display:flex;gap:6px;padding:8px;border-top:1px solid var(--bd)}.cin input{flex:1}
+</style></head><body>
+<header><h1>SRM Smart Campus <small>· Attendance Advisor + Room Finder · Odd Sem 2026-27</small></h1>
+<nav id="nav"><button data-t="att" class="on">📊 Attendance</button><button data-t="rooms">🏢 Room Finder</button><button data-t="map">🧊 3D Map</button></nav></header>
+<main>
+<div id="att" class="tab on">
+<div class="card"><div class="row">
+<label>Class section<select id="sec"></select></label>
+<label>Semester start<input type="date" id="ss" value="2026-08-03"></label>
+<label>Semester end<input type="date" id="se" value="2026-11-30"></label>
+<label>Planning date<input type="date" id="pd" value="2026-10-31"></label>
+<label>Holidays (YYYY-MM-DD, comma)<input id="hol" placeholder="2026-10-19,2026-11-08" size="24"></label></div>
+<p style="margin:10px 0 4px;color:var(--mut);font-size:13px">Enter your current attendance % per subject (theory slots from the timetable):</p><div class="row" id="inp"></div></div>
+<div id="warn"></div>
+<div class="grid2"><div class="card"><b>Overall attendance health</b><div id="ring" style="text-align:center"></div></div>
+<div class="card"><b>OD / Medical-leave simulator</b><p style="color:var(--mut);font-size:13px;margin:4px 0 8px">Days counted as present (On-Duty) are added to every subject and the final % is recalculated instantly.</p>
+<div class="row"><label>From<input type="date" id="odf"></label><label>No. of days<input type="number" id="odn" min="0" value="0" style="width:80px"></label></div><div id="odout" style="margin-top:10px;font-size:13px"></div></div></div>
+<div class="card"><b>Subject-wise projection</b><div id="charts" style="margin-top:10px"></div></div>
+<div class="card tw"><table id="tb"></table></div></div>
+
+<div id="rooms" class="tab">
+<div class="card"><b>🤖 AI Room Finder</b><div class="row" style="margin-top:8px"><input id="q" style="flex:1;min-width:220px" placeholder="I need an AC room on the ground floor for me and my team for the next 2 hours"><button class="btn p" id="qb">Find rooms</button></div><div id="qo" style="margin-top:10px"></div></div>
+<div class="card"><div class="row"><label>Time (blank = live)<input type="datetime-local" id="sim"></label><button class="btn" id="live">Use live time</button>
+<label>Floor<select id="ff"><option value="">All</option></select></label><label>AC<select id="fa"><option value="">Any</option><option value="1">AC only</option><option value="0">Non-AC</option></select></label></div>
+<div id="clk" style="margin:8px 0;color:var(--mut)"></div><div id="floors"></div></div></div>
+
+<div id="map" class="tab"><div class="grid2" style="grid-template-columns:2fr 1fr">
+<div class="card"><div class="row"><b>Building map</b><span style="color:var(--mut);font-size:13px">🟢 free · 🔴 occupied · click a room</span><label style="margin-left:auto">Rotate<input type="range" id="rot" min="-80" max="10" value="-35"></label></div>
+<div id="scene"><div id="bld"></div></div></div>
+<div class="card" id="det"><b>Select a room</b><p style="color:var(--mut)">Click any room on the map to see its live countdown.</p></div></div></div>
+</main>
+<button id="fab" title="Attendance Advisor">💬</button>
+<div id="chat"><div style="padding:10px;border-bottom:1px solid var(--bd)"><b>Attendance Advisor</b></div><div id="msgs"></div><div class="cin"><input id="ci" placeholder="If I take a 3-day sick leave from tomorrow, will Chemistry drop below 75%?"><button class="btn p" id="cs">Send</button></div></div>
+<script>
+const $=id=>document.getElementById(id),D='Mon Tue Wed Thu Fri'.split(' ');
+const PER=[[540,590],[590,640],[650,700],[700,750],[750,800],[800,850],[850,900],[910,960],[960,1010]];
+const G0={G:'UHV-II',H:'Verbal Reasoning',I:'Social Engineering'};
+const N={
+b2:{A:'Transforms & BVP',B:'Biomedical Signals & Systems',C:'Electric & Electronic Circuits',D:'Digital Logic (Medical)',E:'Medical Physics',F:'Professional Ethics'},
+d2:{A:'Transforms & BVP',B:'Solid State Devices',C:'Computer Org & Architecture',D:'Digital Logic Design',E:'EM Theory & Interference',F:'Professional Ethics'},
+b3:{A:'Probability & Statistics',B:'Microcontrollers in Medicine',C:'Biomedical Signal Processing',D:'Biometrics',E:'Modern Wireless Comm',F:'Principles of Medical Imaging',G:'Analytical & Logical Thinking',H:'Indian Art Form',I:'Community Connect'},
+e3:{A:'Discrete Mathematics',B:'Microprocessor & Microcontroller',C:'VLSI Design',D:'System & Network on Chip',E:'Machine Learning for All',F:'Community Connect',G:'Analytical & Logical Thinking',H:'Indian Art Form'},
+s3:{A:'Discrete Mathematics',B:'Microprocessor & Microcontroller',C:'VLSI Design',D:'Machine Learning for All',E:'Database Design & Mgmt',F:'Community Connect',G:'Analytical & Logical Thinking',H:'Indian Art Form'},
+e4:{A:'Behavioural Psychology',B:'Wireless Comm & Antenna',C:'Computer Comm & Network Security',D:'Semiconductor Memory Design',E:'Scripting for EDA',F:'Machine Learning for All'}};
+const S={
+'II BME':['602',N.b2,`E C I I - @107+309 @107+309 - -|C E B A - @TB @TB - -|B D A - - @TB @602 - -|A E B D - - - @107+309 @107+309|F A C D - - - @602 @602`],
+'II ECE-DS A':['416',N.d2,`E A I I - @602 @602 @309+107 @309+107|C A E D - @602 - @TB @TB|A B C D - - @TB - -|B C A F - @309+107 @309+107 - -|D B E C - - - - -`],
+'II ECE-DS B':['411',N.d2,`- - @309+107 @309+107 - D B C I|@309+107 @309+107 - - - C D E A|@401 - - - - I E A D|@401 @401 @TB @TB - A C B E|@TB - - - - F A B C`],
+'III BME':['211',N.b3,`@625 @625 @107 @107 - E B F H|@108 @108 @625 - - C D A B|- - - - - C A F D|- - - @108 - A C E B|@108 - - - - F A D E`],
+'III ECE-A':['518',N.e3,`E B B A - @625 @625 - -|H D B B - - @625 - -|C A D F - - - @108+309 @108+309|A E C F - - - - -|D A E C - @108+309 @108+309 - -`],
+'III ECE-B':['518',N.e3,`@108+309 @108+309 - - - E B A D|@625 @625 - - - F B D C|@625 - - - - B B A H|@108+309 @108+309 - - - A C E F|- - - - - C A E D`],
+'III ECE-DS':['519',N.s3,`E B C A - - - - -|C B D F - @108+107 @108+107 - -|H B A C - - - @625 @625|A D E F - - - - -|D A E B - @625 - @108+107 @108+107`],
+'IV ECE-A':['225',N.e4,`C - A D - - - - -|C D B F - - - - -|B @108 E F - - - - -|F A E B - - - - -|C A D E - - - - -`],
+'IV ECE-B':['227',N.e4,`C A E F - - - - -|C E F B - - - - -|C D A B - - - - -|D B @108 A - - - - -|E D F - - - - - -`]};
+for(const k in S)S[k][2]=S[k][2].split('|').map(r=>r.split(' ').map(t=>t=='-'?'':t));
+const ROOMS={0:['107','108','TB'],1:['211','225','227'],2:['309'],3:['401','411','416'],4:['518','519'],5:['602','625']};
+const FN=['Ground','1st','2nd','3rd','4th','5th'],AC=new Set('107 108 309 518 519 602 625 TB'.split(' ')),CAP=r=>['107','108','309'].includes(r)?40:r=='TB'?120:60;
+const rn=r=>r=='TB'?'TB-106':'IST '+r,flo=r=>r=='TB'?0:+r[0]-1;
+const BUSY={};for(const k in S){const[h,,g]=S[k];g.forEach((row,d)=>row.forEach((t,p)=>{if(!t)return;(t[0]=='@'?t.slice(1).split('+'):[h]).forEach(r=>{((BUSY[r]??={})[d]??=[]).push(PER[p])})}))}
+function ivs(r,d){const a=((BUSY[r]||{})[d]||[]).slice().sort((x,y)=>x[0]-y[0]),o=[];for(const v of a){const l=o[o.length-1];if(l&&v[0]-l[1]<=10)l[1]=Math.max(l[1],v[1]);else o.push(v.slice())}return o}
+const fm=m=>{const h=Math.floor(m/60),n=m%60;return(h%12||12)+':'+String(n).padStart(2,'0')+(h<12?' AM':' PM')};
+let sim=null;const now=()=>sim?new Date(sim):new Date();
+function st(r,dt=now()){const d=(dt.getDay()+6)%7,t=dt.getHours()*60+dt.getMinutes()+dt.getSeconds()/60;if(d>4)return{f:1,ts:null,at:null};
+ for(const v of ivs(r,d)){if(t>=v[0]&&t<v[1])return{f:0,ts:v[1],at:v[1]};if(v[0]>t)return{f:1,ts:v[0],at:v[0]}}return{f:1,ts:null,at:null}}
+function freeWin(r,dt,mins){const s=st(r,dt);if(!s.f)return null;const t=dt.getHours()*60+dt.getMinutes();if(s.at==null)return{until:null};return s.at-t>=mins?{until:s.at}:null}
+// ---------- attendance
+const dk=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const pd=v=>{const[a,b,c]=v.split('-').map(Number);return new Date(a,b-1,c)};
+const sod=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x};
+const hols=()=>new Set($('hol').value.split(',').map(s=>s.trim()).filter(Boolean));
+function cnt(L,a,b,mode){const g=S[$('sec').value][2],H=hols(),n=now(),nm=n.getHours()*60+n.getMinutes(),td=dk(n);let c=0;
+ for(let x=sod(a);x<=b;x.setDate(x.getDate()+1)){const d=(x.getDay()+6)%7;if(d>4||H.has(dk(x)))continue;const it=dk(x)==td;
+  g[d].forEach((t,p)=>{if(t!=L)return;if(it&&mode=='past'&&PER[p][1]>nm)return;if(it&&mode=='fut'&&PER[p][0]<=nm)return;c++})}return c}
+const subs=()=>{const g=S[$('sec').value],nm=g[1],L=new Set(g[2].flat().filter(t=>t&&t[0]!='@'));return[...L].sort().map(l=>[l,nm[l]||G0[l]||l])};
+let pct={};
+function buildInp(){pct={};$('inp').innerHTML=subs().map(([l,n])=>{pct[l]=80;return`<label>${n}<input type="number" min="0" max="100" value="80" data-l="${l}" style="width:90px"></label>`}).join('');
+ $('inp').querySelectorAll('input').forEach(i=>i.oninput=()=>{pct[i.dataset.l]=+i.value;calc()});calc()}
+let DATA=[];
+function compute(od){const n=now(),s=pd($('ss').value),e=pd($('se').value),pl=pd($('pd').value),t=sod(n);
+ return subs().map(([l,name])=>{const C=cnt(l,s,t,'past'),R0=cnt(l,t,e,'fut');let a=(pct[l]||0)/100*C,R=R0;const k=od?cnt(l,od[0],od[1],'fut'):0;a+=k;R-=k;
+  const T=C+R0,x=q=>Math.max(0,Math.ceil(q*T-a-1e-9)),x75=x(.75),Rp=cnt(l,t,pl,'fut');
+  return{l,name,C,R:R0,T,a,now:C?a/C*100:0,x75,skip:R-x75,x90:x(.9),max:T?(a+R)/T*100:0,plan:(C+Rp)?(a+Math.min(Rp,R))/(C+Rp)*100:0,Rp,k}})}
+function calc(){DATA=compute(null);const od=+$('odn').value>0&&$('odf').value?[pd($('odf').value),(()=>{const x=pd($('odf').value);x.setDate(x.getDate()+ +$('odn').value-1);return x})()]:null,OD=od?compute(od):null;
+ const bad=DATA.filter(d=>d.max<75);$('warn').innerHTML=bad.length?`<div class="alert">⛔ IRREVERSIBLE DETENTION ALERT — even with 100% attendance from now, you cannot reach 75% in: ${bad.map(d=>d.name+' (max '+d.max.toFixed(1)+'%)').join(', ')}. Contact your faculty advisor about medical / OD condonation immediately.</div>`:'';
+ const cl=d=>d.max<75?'irr':d.now<75?'danger':'safe',lb=d=>d.max<75?'IRREVERSIBLE':d.now<75?'Danger':'Safe';
+ $('tb').innerHTML='<tr><th>Subject</th><th>Now %</th><th>Total classes left</th><th>Must attend (75%)</th><th>Can skip</th><th>To reach 90%</th><th>Max possible</th><th>On plan date*</th><th>Status</th></tr>'+DATA.map(d=>`<tr><td>${d.name}</td><td>${d.now.toFixed(1)}</td><td>${d.R}</td><td>${d.x75>d.R?'—':d.x75}</td><td>${d.skip<0?0:d.skip}</td><td>${d.x90>d.R?'Not possible':d.x90}</td><td>${d.max.toFixed(1)}%</td><td>${d.plan.toFixed(1)}% (${d.Rp} left)</td><td><span class="tag ${cl(d)}">${lb(d)}</span></td></tr>`).join('')+`<tr><td colspan=9 style="color:var(--mut)">*If you attend every class until the planning date. Total classes left in semester (all subjects): <b>${DATA.reduce((s,d)=>s+d.R,0)}</b></td></tr>`;
+ $('charts').innerHTML=DATA.map((d,i)=>{const o=OD?OD[i]:d;return`<div style="font-size:13px">${d.name} — now ${d.now.toFixed(1)}% · projected max ${(o.max).toFixed(1)}%</div><div class="bar"><i style="width:${Math.min(o.max,100)}%;background:var(--ac);opacity:.35"></i><i style="width:${Math.min(d.now,100)}%;background:${d.now<75?'var(--bad)':'var(--ok)'}"></i><b style="left:75%" title="75%"></b></div>`}).join('')+'<div style="font-size:12px;color:var(--mut)">Solid = current · faded = best case at semester end · line = 75%</div>';
+ const tc=DATA.reduce((s,d)=>s+d.C,0),ta=DATA.reduce((s,d)=>s+d.a,0),ov=tc?ta/tc*100:0,c=ov<75?'var(--bad)':ov<85?'var(--warn)':'var(--ok)',r=54,L=2*Math.PI*r;
+ $('ring').innerHTML=`<svg viewBox="0 0 140 140" width="170"><circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--bd)" stroke-width="14"/><circle cx="70" cy="70" r="${r}" fill="none" stroke="${c}" stroke-width="14" stroke-dasharray="${L*ov/100} ${L}" transform="rotate(-90 70 70)" stroke-linecap="round"/><text x="70" y="76" text-anchor="middle" font-size="24" font-weight="700" fill="currentColor">${ov.toFixed(1)}%</text></svg><div style="color:var(--mut);font-size:13px">${tc} classes held so far</div>`;
+ if(OD){const o=OD.reduce((s,d)=>s+d.a,0)/(tc||1)*100;$('odout').innerHTML=`With <b>${$('odn').value}</b> OD/medical day(s): overall now <b>${o.toFixed(1)}%</b> (was ${ov.toFixed(1)}%). Extra classes credited: ${OD.reduce((s,d)=>s+d.k,0)}.<br>`+OD.map(d=>`${d.name}: max possible ${d.max.toFixed(1)}%`).join(' · ')}else $('odout').textContent='Enter number of days to simulate.'}
+// ---------- chatbot
+function say(t,c){const m=document.createElement('div');m.className='m '+c;m.textContent=t;$('msgs').append(m);$('msgs').scrollTop=1e9}
+function bot(q){const s=q.toLowerCase(),t=sod(now());DATA=compute(null);
+ let tg=DATA.filter(d=>d.name.toLowerCase().split(/[^a-z]+/).some(w=>w.length>3&&s.includes(w)));if(!tg.length)tg=DATA;
+ const th=+((s.match(/(\d+)\s*%/)||[])[1]||75);
+ const dm=s.match(/(\d+)[\s-]*day/),days=dm?+dm[1]:/week/.test(s)?7:1;let ls=new Date(t);ls.setDate(ls.getDate()+1);
+ if(/today/.test(s))ls=new Date(t);const wd=D.findIndex(x=>s.includes(x.toLowerCase())),W=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].findIndex(x=>s.includes(x));
+ if(W>=0){ls=new Date(t);do ls.setDate(ls.getDate()+1);while(ls.getDay()!=W)}
+ const le=new Date(ls);le.setDate(le.getDate()+days-1);
+ if(!/leave|sick|absent|miss|off|bunk|skip.*day/.test(s)&&/skip|bunk|how many|can i|safe|need/.test(s))return tg.map(d=>`${d.name}: now ${d.now.toFixed(1)}%. Must attend ${d.x75>d.R?'more than remain (impossible ⛔)':d.x75+' of '+d.R+' remaining'} for 75%; you can skip ${Math.max(0,d.skip)}. For 90% you need ${d.x90>d.R?'—(not possible)':d.x90}.`).join('\n');
+ return`Leave: ${days} day(s) from ${ls.toDateString()}, threshold ${th}%.\n`+tg.map(d=>{const m=cnt(d.l,ls,le,'fut'),bf=cnt(d.l,t,new Date(ls.getTime()-864e5),'fut'),tl=cnt(d.l,t,le,'fut'),pa=(d.a+bf)/(d.C+tl)*100,fin=(d.a+d.R-m)/d.T*100,ok=fin>=th;
+  return`${ok?'✅':'⚠️'} ${d.name}: you'd miss ${m} class(es). Right after leave: ${pa.toFixed(1)}%${pa<th?' (BELOW '+th+'%)':''}. Final if you attend everything else: ${fin.toFixed(1)}% — ${ok?'stays above':'drops below'} ${th}%.`+(fin<75?' 🚨 Detention risk!':'')}).join('\n')}
+$('fab').onclick=()=>{$('chat').classList.toggle('on');if(!$('msgs').children.length)say('Hi! Ask me things like "If I take a 3-day sick leave starting tomorrow, will Chemistry drop below 75%?" or "How many classes can I skip in Biometrics?". I use the numbers from your dashboard.','a')};
+const send=()=>{const v=$('ci').value.trim();if(!v)return;say(v,'u');$('ci').value='';say(bot(v),'a')};$('cs').onclick=send;$('ci').onkeydown=e=>e.key=='Enter'&&send();
+// ---------- rooms
+function parseQ(q){const s=q.toLowerCase(),f={};
+ if(/non[\s-]?ac|without ac|no ac/.test(s))f.ac=0;else if(/\bac\b|air[\s-]?con/.test(s))f.ac=1;
+ const fw={ground:0,first:1,second:2,third:3,fourth:4,fifth:5},m1=s.match(/(ground|first|second|third|fourth|fifth)\s*floor/),m2=s.match(/(\d)(?:st|nd|rd|th)?\s*floor/);
+ if(m1)f.fl=fw[m1[1]];else if(m2)f.fl=Math.max(0,+m2[1]);
+ let mins=60;const h=s.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h\b)/),mi=s.match(/(\d+)\s*min/);if(h)mins=h[1]*60;else if(mi)mins=+mi[1];else if(/half an hour|half hour/.test(s))mins=30;f.mins=mins;
+ const pp=s.match(/(?:team of|group of|for)\s*(\d+)|(\d+)\s*(?:people|members|students|of us)/);if(pp)f.n=+(pp[1]||pp[2]);
+ if(/\blab\b/.test(s))f.lab=1;const at=s.match(/(?:at|from)\s*(\d{1,2})(?::(\d\d))?\s*(am|pm)?/);let dt=now();
+ if(at){let hh=+at[1];if(at[3]=='pm'&&hh<12)hh+=12;if(at[3]=='am'&&hh==12)hh=0;if(!at[3]&&hh<8)hh+=12;dt.setHours(hh,+(at[2]||0),0,0)}f.dt=dt;return f}
+function findRooms(f){const o=[];for(const fl in ROOMS)ROOMS[fl].forEach(r=>{if(f.fl!=null&&+fl!=f.fl)return;if(f.ac!=null&&AC.has(r)!=!!f.ac)return;if(f.n&&CAP(r)<f.n)return;if(f.lab&&!['107','108','309'].includes(r))return;const w=freeWin(r,f.dt,f.mins);if(w)o.push({r,fl:+fl,...w})});return o}
+$('qb').onclick=()=>{const f=parseQ($('q').value),res=findRooms(f);
+ const ch=[f.ac!=null?(f.ac?'AC':'Non-AC'):'Any AC',f.fl!=null?FN[f.fl]+' floor':'Any floor',(f.mins/60).toFixed(f.mins%60?1:0)+' h',fm(f.dt.getHours()*60+f.dt.getMinutes()),f.n?f.n+' people':null,f.lab?'Lab':null].filter(Boolean);
+ $('qo').innerHTML=`<div style="color:var(--mut);font-size:13px;margin-bottom:6px">Understood: ${ch.map(c=>`<span class="tag safe" style="background:var(--ac)">${c}</span>`).join(' ')}</div>`+(res.length?res.map(x=>`<div class="fl"><b>${rn(x.r)}</b><span>${FN[x.fl]} floor · ${AC.has(x.r)?'AC':'Non-AC'} · cap ~${CAP(x.r)} · free ${x.until==null?'for the rest of the day':'until '+fm(x.until)}</span></div>`).join(''):'<div>No room matches. Try a shorter duration or fewer filters.</div>')};
+$('q').onkeydown=e=>e.key=='Enter'&&$('qb').click();
+$('ff').innerHTML+=FN.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+function drawFloors(){const n=now();$('clk').textContent='Showing availability at '+n.toLocaleString([], {weekday:'long',hour:'numeric',minute:'2-digit'});
+ const ff=$('ff').value,fa=$('fa').value;let h='';for(let i=5;i>=0;i--){if(ff&&+ff!=i)continue;const rs=ROOMS[i].filter(r=>fa==''||AC.has(r)==!!+fa);if(!rs.length)continue;
+  h+=`<div class="fl"><b>${FN[i]} floor</b>`+rs.map(r=>{const s=st(r);return`<button class="chip ${s.f?'f':'b'}" data-r="${r}">${rn(r)}${AC.has(r)?' ❄':''} · ${s.f?'free '+(s.at?'till '+fm(s.at):'all day'):'busy till '+fm(s.at)}</button>`}).join('')+'</div>'}
+ $('floors').innerHTML=h;$('floors').querySelectorAll('button').forEach(b=>b.onclick=()=>{go('map');pick(b.dataset.r)})}
+$('sim').onchange=e=>{sim=e.target.value?new Date(e.target.value):null;drawAll()};$('live').onclick=()=>{sim=null;$('sim').value='';drawAll()};$('ff').onchange=$('fa').onchange=drawFloors;
+// ---------- 3D map
+let cur=null,claimed=new Set();
+function build(){let h='';for(let i=0;i<6;i++)h+=`<div class="plate" style="transform:translateZ(${i*90}px)"><span class="fll">${FN[i]}</span>`+ROOMS[i].map((r,j)=>`<div class="rm" data-r="${r}" style="left:${10+j*106}px">${rn(r)}</div>`).join('')+'</div>';
+ $('bld').innerHTML=h;$('bld').querySelectorAll('.rm').forEach(e=>e.onclick=()=>pick(e.dataset.r));rot()}
+const rot=()=>$('bld').style.transform=`rotateX(58deg) rotateZ(${$('rot').value}deg)`;$('rot').oninput=rot;
+function paint(){document.querySelectorAll('.rm').forEach(e=>{e.className='rm '+(st(e.dataset.r).f?'f':'b')+(e.dataset.r==cur?' sel':'')})}
+function pick(r){cur=r;paint();det()}
+function det(){if(!cur)return;const s=st(cur),n=now(),nm=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;let tx,big;
+ if(s.at==null){big='All day';tx='No more classes today — free for the rest of the day.'}else{const sec=Math.max(0,Math.round((s.at-nm)*60)),z=v=>String(v).padStart(2,'0');big=`${z(Math.floor(sec/3600))}:${z(Math.floor(sec%3600/60))}:${z(sec%60)}`;tx=s.f?`Free — next class starts at ${fm(s.at)}`:`Occupied — becomes free at ${fm(s.at)}`}
+ const msg=`📍 Heading to ${rn(cur)}. It's free ${s.at==null?'for the rest of the day':'until '+fm(s.at)}. Come fast!`;
+ $('det').innerHTML=`<b style="font-size:18px">${rn(cur)}</b> <span class="tag ${s.f?'safe':'irr'}">${s.f?'FREE':'OCCUPIED'}</span><div style="color:var(--mut);margin:4px 0">${FN[flo(cur)]} floor · ${AC.has(cur)?'AC':'Non-AC'} · cap ~${CAP(cur)}</div><div style="color:var(--mut);font-size:12px">${s.f?'Time left before next class':'Time until free'}</div><div id="big">${big}</div><p>${tx}</p>`+
+ (s.f?(claimed.has(cur)?`<p style="color:var(--ok)">✅ Room claimed.</p><a class="btn p" style="text-decoration:none;display:inline-block" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">📲 Call the Squad on WhatsApp</a>`:`<button class="btn p" id="cl">Claim this room</button>`):'')}
+document.addEventListener('click',e=>{if(e.target.id=='cl'){claimed.add(cur);det()}});
+// ---------- init
+function go(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==t));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t))}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+$('sec').innerHTML=Object.keys(S).map(k=>`<option>${k}</option>`).join('');$('sec').onchange=buildInp;['ss','se','pd','hol','odf','odn'].forEach(i=>$(i).oninput=calc);
+$('odf').value=dk(now());
+const drawAll=()=>{drawFloors();paint();det()};build();buildInp();drawAll();setInterval(()=>{det()},1000);setInterval(()=>{paint();drawFloors()},30000);
+</script></body></html>
